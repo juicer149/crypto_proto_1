@@ -1,0 +1,19 @@
+alphabets:
+  en:
+    # Versaler A–Z
+    ranges:
+      - [65, 90]
+
+  sv:
+    # A–Z plus svenska ÅÄÖ
+    ranges:
+      - [65, 90]
+      - [196, 196]   # Ä
+      - [197, 197]   # Å
+      - [214, 214]   # Ö
+
+  greek:
+    # Grekiska VERSALA: Α (913) – Ω (937)
+    ranges:
+      - [913, 937]
+
