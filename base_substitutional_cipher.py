@@ -1,7 +1,7 @@
 from typing             import List, Dict
 
 from .base_cipher       import BaseCipher
-from .alfhabet_provider import AlfhabetProviderMixin
+from .alphabet_provider import AlphabetProviderMixin
 from .alphabet_handler  import AlphabetHandlerMixin
 
 
