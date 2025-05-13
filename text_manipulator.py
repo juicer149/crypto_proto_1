@@ -1,127 +1,127 @@
 # text_manipulator.py
 
+from message_bit import MessageBit
+
 
 class TextManipulator:
-
+    """
+    Utility class for text preprocessing.
+    Returns text wrapped in a MessageBit object for safe iteration and manipulation.
+    """
 
     @staticmethod
     def normalize(
-            text            : str,
-            keep_case       : bool  = False,
-            allow_nonalpha  : bool  = False,
-            ) -> str:
+        text: str,
+        keep_case: bool = False,
+        allow_nonalpha: bool = False,
+    ) -> MessageBit:
         """
-        Normalize text by:
-          - Optionally preserving case
-          - Optionally allowing non-alphabetic characters
-          - Otherwise removing everything except A–Z/a–z
+        Normalize text by converting to uppercase (if not keep_case)
+        and removing all non-alphabetic characters (unless allow_nonalpha is True).
 
         Args:
-            text (str)              : Input string.
-            keep_case (bool)        : If False, convert to upper case.
-            allow_nonalpha (bool)   : If True, preserve characters like digits, punctuation.
+            text (str): Input string.
+            keep_case (bool): If False, convert to upper case.
+            allow_nonalpha (bool): If False, remove all non-alpha characters.
 
         Returns:
-            str: The normalized string.
+            MessageBit: The normalized text as a MessageBit object.
         """
-        
         if not keep_case:
             text = text.upper()
 
         if not allow_nonalpha:
             text = ''.join(char for char in text if char.isalpha())
 
-        return text
-
-
-    @staticmethod
-    def remove_spaces(text: str) -> str:
-        """Remove all whitespace characters from text."""
-        return ''.join(text.split())
-
+        return MessageBit(text)
 
     @staticmethod
-    def pad_to_length(
-            text    : str,
-            length  : int,
-            pad_char: str   = 'X'
-            ) -> str:
+    def remove_spaces(bit: MessageBit) -> MessageBit:
         """
-        Pad text on the right with `pad_char` until it reaches `length`.
-
-        If text is already `length` or longer, it's returned unchanged.
-        """
-
-        if len(text) >= length:
-            return text 
-        return text + pad_char * (length - len(text))
-
-
-    @staticmethod
-    def group_text(
-            text    : str,
-            size    : int   = 5
-            ) -> str:
-        """
-        Split text into groups of given size.
+        Remove all spaces from the given MessageBit.
 
         Args:
-            text (str): Input string.
+            bit (MessageBit): The MessageBit instance.
+
+        Returns:
+            MessageBit: New instance without spaces.
+        """
+        return MessageBit(str(bit).replace(" ", ""))
+
+    @staticmethod
+    def pad_to_length(bit: MessageBit, length: int, pad_char: str = 'X') -> MessageBit:
+        """
+        Pad the MessageBit to the target length using pad_char.
+
+        Args:
+            bit (MessageBit): The MessageBit instance.
+            length (int): Desired length.
+            pad_char (str): Character to pad with.
+
+        Returns:
+            MessageBit: Padded instance.
+        """
+        return bit.pad(length, pad_char)
+
+    @staticmethod
+    def group_text(bit: MessageBit, size: int = 5) -> str:
+        """
+        Split the text into groups of given size, separated by spaces.
+
+        Args:
+            bit (MessageBit): The MessageBit instance.
             size (int): Group size.
 
         Returns:
-            str: Groups separated by spaces.
+            str: Grouped string.
         """
-
-        if size <= 0:
-            return text
-
-        return ' '.join(text[i:i + size] for i in range(0, len(text), size))
-
+        return bit.group(size)
 
     @classmethod
     def format_text(
-            cls,
-            text: str,
-            remove_spaces: bool = False,
-            keep_case: bool = False,
-            allow_nonalpha: bool = False,
-            group: bool = False,
-            group_size: int = 5,
-            pad: bool = False,
-            pad_char: str = 'X'
-            ) -> str:
+        cls,
+        text: str,
+        remove_spaces: bool = False,
+        keep_case: bool = False,
+        allow_nonalpha: bool = False,
+        group: bool = False,
+        group_size: int = 5,
+        pad: bool = False,
+        pad_char: str = 'X'
+    ) -> MessageBit:
         """
-        Apply a sequence of text transformations:
-            1. Normalize (case, non-alpha)
-            2. Optionally remove spaces
-            3. Optionally pad to a multiple of group_size
-            4. Optionally group into blocks
+        Apply a full sequence of text transformations:
+            1. Normalize (case, non-alpha handling).
+            2. Optionally remove spaces.
+            3. Optionally pad to multiple of group_size.
+            4. Optionally group into blocks (returned as str using .group()).
 
         Args:
-            text (str): Input string.
-            remove_spaces (bool): Remove spaces if True.
-            keep_case (bool): Preserve original case if True.
-            allow_nonalpha (bool): Keep non-alpha chars if True.
-            group (bool): Group text if True.
-            group_size (int): Size of each group.
-            pad (bool): Pad to full group if True.
-            pad_char (str): Character to use for padding.
+            text (str): Input text.
+            remove_spaces (bool): If True, remove all spaces.
+            keep_case (bool): If False, convert to uppercase.
+            allow_nonalpha (bool): If False, remove all non-alpha characters.
+            group (bool): If True, the resulting text can be grouped (via .group()).
+            group_size (int): Group size for grouping.
+            pad (bool): If True, pad to multiple of group_size.
+            pad_char (str): Padding character.
 
         Returns:
-            str: Transformed text.
+            MessageBit: Processed MessageBit object.
         """
-        result = cls.normalize(text, keep_case, allow_nonalpha)
+        bit = cls.normalize(text, keep_case, allow_nonalpha)
 
         if remove_spaces:
-            result = cls.remove_spaces(result)
+            bit = cls.remove_spaces(bit)
 
         if pad and group and group_size > 0:
-            remainder = len(result) % group_size
+            remainder = len(bit) % group_size
             if remainder:
-                result = cls.pad_to_length(result, len(result) + (group_size - remainder), pad_char)
+                bit = cls.pad_to_length(bit, len(bit) + (group_size - remainder), pad_char)
 
         if group and group_size > 0:
-            result = cls.group_text(result, group_size)
+            # OBS: This will return still a MessageBit, not grouped string here.
+            # Grouping should be explicitly called via bit.group() later.
+            pass  # Keep the object as is
 
-        return result
+        return bit
