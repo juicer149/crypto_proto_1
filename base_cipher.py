@@ -1,25 +1,24 @@
+# cipher_base-py
+
 from abc import ABC, abstractmethod
+
+from text_manipulator import TextManipulator
 
 
 class BaseCipher(ABC):
     """
-    Minimal abstrakt klass; innehåller bara normalize
-    och signatur för encrypt/decrypt.
+    Abstract base class for ciphers.
+    Uses TextManipulator as a utility instance.
     """
 
-
-    @staticmethod
-    def _normalize(text: str) -> str:
-        return ''.join(ch for ch in text if ch.isalpha()).upper()
+    manipulator = TextManipulator # Class reference; easy to replace or mock.
 
 
     @abstractmethod
     def encrypt(self, text: str) -> str:
-        """Ta en klartext‐sträng och returnera krypterad text."""
         ...
 
 
     @abstractmethod
     def decrypt(self, text: str) -> str:
-        """Ta en krypterad sträng och returnera klartext."""
         ...
