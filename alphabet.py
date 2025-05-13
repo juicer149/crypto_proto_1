@@ -9,6 +9,7 @@ from typing import (
     TypeVar,
     Generic,
     Iterator,
+    Optional
 )
 
 from load_yaml import load_yaml
@@ -40,13 +41,16 @@ class Alphabet(Generic[T]):
             - and to load those configs files to be able to only change in one file
     """
 
+
     def __init__(self, chars: List[T]) -> None:
         if not chars:
             raise ValueError("Alphabet cannot be empty")
         self._chars: List[T] = chars
 
+
     def __len__(self) -> int:
         return len(self._chars)
+
 
     def __getitem__(self, index: int) -> T:
         """
@@ -65,35 +69,59 @@ class Alphabet(Generic[T]):
     def __iter__(self) -> Iterator[T]:
         return iter(self._chars) 
 
+
     @classmethod
     def from_config(
         cls,
         language: str,
-        config_path: str = "config/charsets.yaml"   # TD 1
+        config_path: str = "config/charsets.yaml",   # TD 1
+        user_extras: Optional[List[int]] = None,
+
     ) -> "Alphabet[T]":
         """
-        Load an alphabet for `language` from YAML at `config_path`.
+        Load an alphabet for `language` from YAML at `config_path`,
+        optionally adding user-specified extra characters.
+
+        Args:
+            language (str): Language key in YAML.
+            config_path (str): Path to YAML.
+            user_extras (Optional[List[int]]): Additional characters (as code points)
 
         Raises:
             ValueError if `language` is not defined in the file.
+
+        Returns:
+            Alphabet[T]
+
+        Example:
+            # Load English from YAML and add special symbols
+            Alphabet.from_config("en", user_extras=[8364, 163])  # Adds €, £
+
         """
         data: Dict[str, Any] = load_yaml(config_path)
-        alphabets = data.get("alphabets", {})       # TD 1
+        alphabets = data.get("alphabets", {})
 
         if language not in alphabets:
             raise ValueError(f"Unknown language: {language!r}")
 
         cfg = alphabets[language]
+
         # Build from ranges
         chars: List[T] = [
             chr(code)
-            for start, end in cfg.get("ranges", []) # TD 1 // "ranges" = ranges
+            for start, end in cfg.get("ranges", [])
             for code in range(start, end + 1)
         ]
-        # Add extras
-        chars += [chr(code) for code in cfg.get("extras", [])]  # TD 1 // "extras" = extras -> might take this one out to be able to either have extras from yaml or for the user to decide, as for a nomeclator, ie. codes = [ord(input('symbols') for symbol in symbols] -> chars = [chr(code) for code in codes
+
+        # Combine YAML extras and user_extras
+        extras = cfg.get("extras", [])
+        if user_extras:
+            extras += user_extras
+
+        chars += [chr(code) for code in extras]
 
         return cls(chars)
+
 
     def __mul__(self, shift: int) -> "Alphabet[T]":
         """
@@ -113,7 +141,9 @@ class Alphabet(Generic[T]):
         rotated_chars = self._chars[offset:] + self._chars[:offset]
         return type(self)(rotated_chars)
 
-    __rmul__ = __mul__ # to allow both alphabet * x and x * alphabet
+    # Allow both `alphabet * x` and `x * alphabet`
+    __rmul__ = __mul__ 
+
 
     def substitution_map(self, other: "Alphabet[T]") -> Dict[T, T]:
         """
@@ -135,20 +165,19 @@ class Alphabet(Generic[T]):
             )
         return dict(zip(self._chars, other._chars))
 
+
     def rotations(self, step: int = 1) -> Iterator["Alphabet[T]"]:
         """
         Yield successive rotations by multiples of `step` until full cycle.
+
+        Args:
+            step (int): Rotation step size.
 
         Example:
             for alpha in alphabet.rotations(5):
                 print(alpha)
         """
-        seen = set()
-        current = 0
         length = len(self)
-
-        while current not in seen:
-            seen.add(current)
-            yield self * current
-            current = (current + step) % length
+        for i in range(0, length, step):
+            yield self * i
 
