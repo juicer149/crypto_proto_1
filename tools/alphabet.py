@@ -12,7 +12,7 @@ from typing import (
     Optional
 )
 
-from load_yaml import load_yaml
+from config_loader import load_config
 
 T = TypeVar("T", bound=str)
 
@@ -54,17 +54,28 @@ class Alphabet(Generic[T]):
 
     def __getitem__(self, index: int) -> T:
         """
-        Get the character at a given index.
+        Get the character at a given index or a sub-Alphabet from a slice.
 
-        Supports iteration and indexing.
+        If given an integer index, returns the character at that position.
+        If given a slice, returns a new Alphabet containing the sliced characters.
+
+        Examples:
+            a = Alphabet(['A', 'B', 'C', 'D'])
+            a[1]      # 'B'
+            a[:2]     # Alphabet(['A', 'B'])
 
         Args:
-            index (int): The index to retrieve.
+            index (int or slice): The position or slice to retrieve.
 
         Returns:
-            T: The character at the given index.
+            str: If index is an integer.
+            Alphabet[T]: If index is a slice.
         """
-        return self._chars[index]
+        if isinstance(index, slice):
+            return type(self)(self._chars[index])
+        else:
+            return self._chars[index]
+
 
     def __iter__(self) -> Iterator[T]:
         return iter(self._chars) 
@@ -98,7 +109,7 @@ class Alphabet(Generic[T]):
             Alphabet.from_config("en", user_extras=[8364, 163])  # Adds €, £
 
         """
-        data: Dict[str, Any] = load_yaml(config_path)
+        data: Dict[str, Any] = load_config(config_path)
         alphabets = data.get("alphabets", {})
 
         if language not in alphabets:
