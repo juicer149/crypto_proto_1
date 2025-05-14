@@ -1,6 +1,5 @@
 # alphabet.py
 
-import yaml
 from pathlib import Path
 from typing import (
     Any,
