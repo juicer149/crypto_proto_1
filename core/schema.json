@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "pipelines": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "engine": {
+                "type": "string",
+                "enum": ["static_rot", "alberti_rot", "vigenere_rot", "plugboard"]
+              },
+              "shift": { "type": "integer" },
+              "initial_shift": { "type": "integer" },
+              "shift_interval": { "type": "integer" },
+              "shift_step": { "type": "integer" },
+              "key_stream": { "type": "string" },
+              "map": { "type": "object" }
+            },
+            "required": ["engine"]
+          }
+        }
+      }
+    }
+  },
+  "required": ["pipelines"]
+}
+
