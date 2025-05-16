@@ -7,55 +7,60 @@
 +------------------------------------------------------+
 |        Public API Layer (pipeline_runner.py)         |
 |                                                      |
-|  - run_pipeline_from_config(config_file, schema_file,|
-|                             pipeline_name, text,     |
-|                             alphabet_language)       |
+|  - run_pipeline(pipeline_spec, text, alphabet)       |
 |                                                      |
-|  - (ev. andra convenience-metoder)                   |
+|  - (Ev. andra helpers som genererar engines          |
+|     med rätt verktyg beroende på kontext)            |
 |                                                      |
 |  * Samlar all interaktion för konsumenten            |
-|  * Gömmer underliggande lager                        |
+|  * Gömmer underliggande lager och verktyg            |
 +------------------------------------------------------+
                            |
                            v
 +------------------------------------------------------+
-|       Factory & Validation Layer (pipeline_factory)  |
-|                                                      |
-|  - validate_pipeline_config()                        |
-|  - create_pipelines_from_config()                    |
-|                                                      |
-|  * Bygger pipelines via ENGINE_REGISTRY              |
-|  * Validerar konfiguration mot schema                |
-|  * Returnerar färdiga CipherPipeline-objekt          |
-+------------------------------------------------------+
-                           |
-                           v
-+------------------------------------------------------+
-|       Pipeline Execution Layer (cipher_pipeline)     |
+|             Pipeline Layer (cipher_pipeline.py)      |
 |                                                      |
 |  - CipherPipeline                                    |
-|      * Tar engines och kör text                      |
-|      * Ingen konfiguration eller logik om pipelines  |
+|      * Tar engines eller mixins och kör text         |
+|      * Binder ihop verktyg och engines i sekvens     |
+|                                                      |
+|  * Ingen manipulation, endast orkestrering           |
+|  * Pipelines är deklarativa                          |
 +------------------------------------------------------+
                            |
                            v
 +------------------------------------------------------+
-|             Engines Layer (plugboard, rot, etc.)     |
+|               Engines Layer (rot, alberti, etc.)     |
 |                                                      |
-|  - PlugboardEngine, StaticRot, AlbertiRot, Vigenere  |
+|  - StaticRotEngine                                   |
+|  - AlbertiEngine                                     |
+|  - VigenereEngine                                    |
 |                                                      |
-|  * Varje engine implementerar                        |
-|    get_substitution_for_position(pos)                |
+|  * Varje engine använder cipher_tools-mixins         |
+|    och orchestrerar manipulationer                   |
+|                                                      |
+|  * Ingen logik för datahantering, endast strategi    |
 +------------------------------------------------------+
                            |
                            v
 +------------------------------------------------------+
-|             Core Utility Layer (tools/*)             |
+|          Cipher Tools Layer (cipher_tools/*)         |
 |                                                      |
-|  - Alphabet                                           |
-|  - MessageBit                                        |
-|  - TextManipulator                                   |
+|  - RotMixin, KeywordMixin, PlugboardMixin, etc.      |
 |                                                      |
-|  * Abstraktioner för text, alfabet, formattering     |
+|  * Rena manipulationer via __call__                  |
+|  * Kombinerbara mixins för engines                   |
+|  * Inga beroenden, inga tillstånd utanför sequence   |
++------------------------------------------------------+
+                           |
+                           v
++------------------------------------------------------+
+|        Core Manipulation Layer (sequence_manipulator)|
+|                                                      |
+|  - SequenceManipulator                               |
+|                                                      |
+|  * Enda abstraktionen som kan manipulera sekvenser   |
+|  * Fail-fast, strikt, domänneutral                   |
+|  * All manipulation går via denna                   |
 +------------------------------------------------------+
 

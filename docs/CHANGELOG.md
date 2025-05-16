@@ -7,56 +7,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## \[Unreleased]
 
 ### Added
-- Introduced modular project structure with `core`, `engines`, `tools`, and `config` directories.
-- Created `config_loader.py` to handle both YAML and JSON loading, replacing old hardcoded loaders.
-- Added `tools/alphabet.py` as a composable, reusable Alphabet class supporting rotations and substitutions.
-- Added `tools/message_bit.py` for safe string handling, grouping, and padding, with clean API.
-- Added `tools/text_manipulator.py` refactored to return `MessageBit` for all operations.
-- Created `engines/rot.py` with unified ROT engine abstraction (`AbstractRotEngine`) and implementations for:
-  - Static ROT (e.g., Caesar, ROT13)
-  - Alberti ROT (progressive shift)
-  - Vigenère ROT (keyword-based shift)
-- Created `engines/plugboard.py` for static plugboard mapping support.
-- Created `engines/registry.py` with dynamic engine registration system.
-- Created `core/pipeline_factory.py` and `core/pipeline_runner.py` supporting YAML-driven pipelines of engines.
-- Created `core/schema.json` for strict JSON Schema validation of cipher pipelines.
-- Implemented dynamic pipeline composition and substitution chaining using `CipherPipeline`.
+
+* Introduced a modular and layered project structure with directories:
+
+  * `core`: Manages pipeline creation, execution, and validation.
+  * `engines`: Contains specific cipher engines implementations.
+  * `tools`: Provides reusable utilities for alphabets, text manipulation, and message handling.
+  * `config`: Centralizes configuration files.
+* Added `config_loader.py` capable of handling both YAML and JSON configuration files.
+* Created generic and reusable `SequenceManipulator` class (`lib/sequencemanipulator.py`) for domain-neutral sequence operations, including strict validation and rotation capabilities.
+* Implemented mixins for composable sequence transformations:
+
+  * `KeywordMixin` for keyword-based sequence manipulations.
+  * `RotMixin` for ROT-style sequence rotations.
+* Refined `Alphabet` class (`lib/dataclasses/alphabet.py`) to leverage `SequenceManipulator`, supporting dynamic rotations, keyword manipulations, and substitutions.
+* Enhanced safe string handling with `MessageBit` (`tools/message_bit.py`) providing clean methods for text grouping, padding, and whitespace management.
+* Refactored `TextManipulator` (`tools/text_manipulator.py`) to consistently return `MessageBit` objects.
+* Created `engines/rot.py` featuring a unified ROT engine abstraction (`AbstractRotEngine`) and concrete implementations:
+
+  * Static ROT (Caesar, ROT13)
+  * Alberti ROT (progressive shifts)
+  * Vigenère ROT (keyword-based shifts)
+* Created `engines/plugboard.py` supporting static plugboard mappings.
+* Implemented dynamic engine registration via `engines/registry.py`.
+* Built `core/pipeline_factory.py` and `core/pipeline_runner.py` for YAML/JSON-driven cipher pipelines with schema validation (`core/schema.json`).
+* Established a clear architecture and API layering model documented in `docs/arcitecur_layer.md`.
 
 ### Changed
-- Refactored old monolithic cipher classes into decoupled engines and pipelines.
-- Removed hardcoded cipher catalog and replaced with registry + factory pattern.
-- Improved configurability and CLI-friendliness by relying entirely on config files for pipelines, alphabets, and engines.
-- Replaced all hardcoded ROT, Caesar, Alberti logic with composable ROT engines.
-- Cleaned up text handling by introducing `MessageBit` instead of handling raw strings directly.
+
+* Refactored monolithic cipher classes into decoupled engines and modular pipelines.
+* Migrated from a hardcoded cipher catalog to a flexible registry and factory design pattern.
+* Standardized all cipher configurations via external files (`charsets.yaml`, `cipher.yaml`) enhancing configurability and CLI usability.
+* Replaced old hardcoded cipher logic (Caesar, ROT, Alberti) with composable ROT engines.
+* Updated text handling to exclusively use `MessageBit` for safer string operations and clearer codebase.
 
 ### Removed
-- Deleted legacy files:
-  - `alphabet.py`
-  - `base_cipher.py`
-  - `base_substitutional_cipher.py`
-  - `cipher_catalog.py`
-  - `cipher_factory.py`
-  - `load_yaml.py`
-  - `rot_engine.py`
-  - `message_bit.py` (replaced by `tools/message_bit.py`)
-  - `text_manipulator.py` (replaced by `tools/text_manipulator.py`)
+
+* Deprecated legacy files:
+
+  * `alphabet.py`
+  * `base_cipher.py`
+  * `base_substitutional_cipher.py`
+  * `cipher_catalog.py`
+  * `cipher_factory.py`
+  * `load_yaml.py`
+  * `rot_engine.py`
+  * Old `message_bit.py` and `text_manipulator.py` (replaced by versions in `tools`)
 
 ### Deprecated
-- N/A
+
+* N/A
 
 ---
 
-## [0.1.0] - Initial Experimentation Phase
+## \[0.1.0] - Initial Experimentation Phase
 
 ### Added
-- First prototypes for Caesar cipher, ROT engine, message handling, and substitution mapping.
-- Created basic config handling and alphabet utilities.
-- Wrote minimal CLI for testing cipher implementations.
-- Added first experimental Python scripts in flat structure.
+
+* Initial prototypes for basic ciphers (Caesar, ROT), message handling, and substitution mapping.
+* Basic configuration handling and alphabet utilities.
+* Simple CLI scripts for experimental cipher implementations.
 
 ### Notes
-- This phase was exploratory, before introducing the layered and modular refactoring done later.
+
+* This version marked the exploratory phase before modular refactoring and structured layering were introduced.
 
