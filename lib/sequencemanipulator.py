@@ -1,5 +1,4 @@
-# sequencemanipulator.py
-from typing import List, TypeVar, Type, Generic, Iterator, Dict
+# sequencemanipulator.pyfrom typing import List, TypeVar, Type, Generic, Iterator, Dict, Callable
 
 T = TypeVar("T")
 
@@ -194,3 +193,39 @@ class SequenceManipulator(Generic[T]):
                 yield SequenceManipulator([element] + seq, strict=self._strict, expected_type=self._expected_type)
 
 
+    def generate_sequences(self, n: int, generator_func: Callable[[int], List[T]]) -> List['SequenceManipulator[T]']:
+        """
+        Generate a list of SequenceManipulator instances by applying 'generator_func'
+        for i in range(n).
+
+        This method is intentionally agnostic to any domain logic (e.g. ROT, keyword, Vigenère).
+        It simply applies the provided 'generator_func' with the current index and expects
+        a list of elements in return, which will be wrapped in a new SequenceManipulator.
+
+        Use case example (in a cipher engine):
+            - Create a sequence of alphabets for Vigenère, where each is shifted by the key.
+            - Create dynamic alphabets using a keyword or Alberti logic.
+        
+        The engine or caller is fully responsible for providing the correct logic;
+        this method only handles the wrapping and iteration.
+
+        Fails fast:
+            - If n <= 0: Raises ValueError.
+            - If n == 1: Raises ValueError suggesting to use manipulator directly instead.
+
+        Args:
+            n (int): Number of sequences to generate.
+            generator_func (Callable[[int], List[T]]): Function taking an index and returning a list.
+
+        Returns:
+            List[SequenceManipulator[T]]: Generated sequence manipulators.
+        """
+        if n <= 0:
+            raise ValueError("Cannot generate zero or negative number of sequences.")
+        if n == 1:
+            raise ValueError("Generating only one sequence is discouraged; use the manipulator directly instead.")
+
+        return [
+            type(self)(generator_func(i), strict=self._strict, expected_type=self._expected_type)
+            for i in range(n)
+        ]
