@@ -53,17 +53,6 @@ class SequenceManipulator(Generic[T]):
         return iter(self._data)
 
 
-    def __add__(self, other: 'SequenceManipulator[T]') -> Dict[T, T]:
-        """
-        Create a substitution map by pairing this sequence with another.
-        """
-        if len(self) != len(other):
-            raise ValueError(
-                f"Cannot build substitution map: lengths differ ({len(self)} vs {len(other)})"
-            )
-        return dict(zip(self._data, other._data))
-
-
     def append(self, element: T) -> None:
         """
         Append an element to the sequence.
