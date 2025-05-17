@@ -1,6 +1,7 @@
 # tools/keyword_mixin.py
 
-from tools.sequencemanipulator import SequenceManipulator
+from lib.sequences.sequence_manipulator import SequenceManipulator
+
 
 class KeywordMixin:
     """
