@@ -1,4 +1,23 @@
-from typing import List, TypeVar, Type, Generic, Iterator, Callable, Tuple
+"""
+SequenceManipulator
+--------------------
+A generic, immutable sequence transformation utility.
+
+Supports rotation, mapping, keyword manipulation, and indexed generation. 
+Designed for cryptographic use, but applicable across any domain
+where immutable list transformations are needed.
+
+Examples:
+    >>> from sequencemanipulator import SequenceManipulator
+    >>> seq = SequenceManipulator(['A', 'B', 'C'])
+    >>> list(seq.rotate_by(1))
+    ['C', 'A', 'B']
+"""
+
+
+from typing import Callable, Generic, Iterable, Iterator, List, Tuple, TypeVar, Type
+from math import gcd
+import warnings
 
 
 T = TypeVar("T")
@@ -32,6 +51,8 @@ class SequenceManipulator(Generic[T]):
         ['C', 'A', 'B', 'D']
     """
 
+    __slots__ = ('_data', '_strict', '_expected_type')
+
 
     def __init__(self, data: List[T], strict: bool = True, expected_type: Type[T] = str):
         """
@@ -54,16 +75,46 @@ class SequenceManipulator(Generic[T]):
             TypeError: ...
         """
 
-        if strict:
-            for i, item in enumerate(data):
-                if not isinstance(item, expected_type):
-                    raise TypeError(
-                        f"Element at index {i} ({item!r}) is not of type {expected_type.__name__}"
-                    )
         self._data: Tuple[T, ...] = tuple(data)
         self._strict = strict
         self._expected_type = expected_type
 
+        if self._strict:
+            invalid_items = [
+                    (i, item) for i, item in enumerate(data) 
+                    if not isinstance(item, self._expected_type)]
+            if invalid_items:
+                details = ", ".join(f"index {i}: {item!r}" for i, item in invalid_items)
+                raise TypeError(f"Elements with invalid types found: {details}")
+
+
+
+    def __repr__(self) -> str:
+        """
+        Represent the sequence cleanly for REPL/debugging.
+        
+        Example:
+            >>> SequenceManipulator(['X', 'Y'])
+            SequenceManipulator(['X', 'Y'])
+        """
+        return f"{self.__class__.__name__}({list(self._data)})"
+
+
+    @classmethod
+    def with_type(
+            cls: Type['SequenceManipulator[T]'], 
+            data: Iterable[T], 
+            expected_type: Type[T]
+            ) -> 'SequenceManipulator[T]':
+        """
+        Factory class to clearly specify expected type.
+        This makes the API more explicit and shifts type declaration to construction time.
+
+        Example:
+            >>> SequenceManipulator.with_type(['X', 'Y'], str)
+            SequenceManipulator(['X', 'Y'])
+        """
+        return cls(data, strict=True, expected_type=expected_type)
 
     def __len__(self) -> int:
         """
@@ -153,6 +204,8 @@ class SequenceManipulator(Generic[T]):
             TypeError: ...
         """
 
+        elements = list(elements)
+
         if self._strict:
             for i, item in enumerate(elements):
                 if not isinstance(item, self._expected_type):
@@ -164,7 +217,9 @@ class SequenceManipulator(Generic[T]):
 
     def rotate_by(self, shift: int) -> 'SequenceManipulator[T]':
         """
-        Return a new sequence rotated by 'shift' positions.
+        Create a rotated copy of the sequence.
+
+        Useful for Caesar/ROT-style operations or offset-based transformations.
 
         Args:
             shift (int): Positions to rotate (can be negative).
@@ -231,6 +286,12 @@ class SequenceManipulator(Generic[T]):
             raise ValueError("Cannot rotate an empty sequence.")
         if step <= 0:
             raise ValueError("Step must be a positive integer.")
+
+        if gcd(step, len(self._data)) != 1:
+            warnings.warn(
+                f"rotate_generator: step {step} is not coprime with length {len(self._data)}. Full cycle not guaranteed."
+            ) # lägg till denna i doctest
+
         seen: set[int] = set()
         length = len(self._data)
         current = 0
@@ -239,8 +300,22 @@ class SequenceManipulator(Generic[T]):
             yield self.rotate_by(current)
             current = (current + step) % length
 
+    def cycle_length(self, step: int) -> int:
+        """
+        Returns number of unique rotations based on step.
+        
+        Example:
+            >>> SequenceManipulator(['A', 'B', 'C']).cycle_length(1)
+            3
+        """
+        return len(self._data) // gcd(step, len(self._data))
 
-    def generate_sequences(self, n: int, generator_func: Callable[[int], List[T]]) -> List['SequenceManipulator[T]']:
+
+    def from_generator(
+            self, n: int, 
+            generator_func: Callable[[int], 
+            Iterator[T]]
+            ) -> List['SequenceManipulator[T]']:
         """
         Generate a list of sequences by applying 'generator_func' for each i in range(n).
 
@@ -266,14 +341,17 @@ class SequenceManipulator(Generic[T]):
 
         Example:
             >>> def gen(i): return [chr(65 + (j + i) % 3) for j in range(3)]
-            >>> seqs = SequenceManipulator(['A', 'B', 'C']).generate_sequences(3, gen)
-            >>> [list(seq) for seq in SequenceManipulator(['A', 'B', 'C']).rotate_generator(1)]
-            [['A', 'B', 'C'], ['C', 'A', 'B'], ['B', 'C', 'A']]
+            >>> seqs = SequenceManipulator(['A', 'B', 'C']).from_generator(3, gen)
+            >>> [list(seq) for seq in seqs]
+            [['A', 'B', 'C'], ['B', 'C', 'A'], ['C', 'A', 'B']]
         """
+
         if n <= 0:
             raise ValueError("Cannot generate zero or negative number of sequences.")
+
         if n == 1:
             raise ValueError("Generating only one sequence is discouraged; use the manipulator directly instead.")
+
         return [
             type(self)(generator_func(i), strict=self._strict, expected_type=self._expected_type)
             for i in range(n)
@@ -304,5 +382,5 @@ class SequenceManipulator(Generic[T]):
         for element in elements:
             if element in self._data:
                 temp = list(self._data)
-        temp.remove(element)
-        yield type(self)([element] + temp, strict=self._strict, expected_type=self._expected_type)
+                temp.remove(element)
+                yield type(self)([element] + temp, strict=self._strict, expected_type=self._expected_type)
