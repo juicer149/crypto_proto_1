@@ -1,5 +1,5 @@
 """
-SequenceManipulator
+SequenceTool
 --------------------
 A generic, immutable sequence transformation utility.
 
@@ -8,8 +8,8 @@ Designed for cryptographic use, but applicable across any domain
 where immutable list transformations are needed.
 
 Examples:
-    >>> from sequencemanipulator import SequenceManipulator
-    >>> seq = SequenceManipulator(['A', 'B', 'C'])
+    >>> from sequence_tool import SequenceTool
+    >>> seq = SequenceTool(['A', 'B', 'C'])
     >>> list(seq.rotate_by(1))
     ['C', 'A', 'B']
 """
@@ -23,7 +23,7 @@ import warnings
 T = TypeVar("T")
 
 
-class SequenceManipulator(Generic[T]):
+class SequenceTool(Generic[T]):
     """
     A minimal, strict, fully immutable sequence manipulation tool for generic,
     type-checked operations across different domains.
@@ -44,7 +44,7 @@ class SequenceManipulator(Generic[T]):
 
 
     Example:
-        >>> seq = SequenceManipulator(['A', 'B', 'C'])
+        >>> seq = SequenceTool(['A', 'B', 'C'])
         >>> rotated = seq.rotate_by(1)
         >>> updated = rotated.append('D')
         >>> list(updated)
@@ -67,10 +67,10 @@ class SequenceManipulator(Generic[T]):
             TypeError: If strict is True and elements do not match expected_type.
         
         Example:
-            >>> list(SequenceManipulator(['A', 'B']))
+            >>> list(SequenceTool(['A', 'B']))
             ['A', 'B']
 
-            >>> SequenceManipulator(['A', 1])   # doctest: +ELLIPSIS
+            >>> SequenceTool(['A', 1])   # doctest: +ELLIPSIS
             Traceback (most recent call last):
             TypeError: ...
         """
@@ -94,25 +94,25 @@ class SequenceManipulator(Generic[T]):
         Represent the sequence cleanly for REPL/debugging.
         
         Example:
-            >>> SequenceManipulator(['X', 'Y'])
-            SequenceManipulator(['X', 'Y'])
+            >>> SequenceTool(['X', 'Y'])
+            SequenceTool(['X', 'Y'])
         """
         return f"{self.__class__.__name__}({list(self._data)})"
 
 
     @classmethod
     def with_type(
-            cls: Type['SequenceManipulator[T]'], 
+            cls: Type['SequenceTool[T]'], 
             data: Iterable[T], 
             expected_type: Type[T]
-            ) -> 'SequenceManipulator[T]':
+            ) -> 'SequenceTool[T]':
         """
         Factory class to clearly specify expected type.
         This makes the API more explicit and shifts type declaration to construction time.
 
         Example:
-            >>> SequenceManipulator.with_type(['X', 'Y'], str)
-            SequenceManipulator(['X', 'Y'])
+            >>> SequenceTool.with_type(['X', 'Y'], str)
+            SequenceTool(['X', 'Y'])
         """
         return cls(data, strict=True, expected_type=expected_type)
 
@@ -121,7 +121,7 @@ class SequenceManipulator(Generic[T]):
         Return the number of elements.
         
         Example:
-            >>> seq = SequenceManipulator(['A', 'B', 'C',])
+            >>> seq = SequenceTool(['A', 'B', 'C',])
             >>> len(seq)
             3
         """
@@ -134,9 +134,9 @@ class SequenceManipulator(Generic[T]):
         Return the element at the given index.
         
         Example:
-            >>> SequenceManipulator(['A', 'B', 'C'])[0]
+            >>> SequenceTool(['A', 'B', 'C'])[0]
             'A'
-            >>> SequenceManipulator(['A', 'B', 'C'])[-1]
+            >>> SequenceTool(['A', 'B', 'C'])[-1]
             'C'
         """
 
@@ -148,14 +148,14 @@ class SequenceManipulator(Generic[T]):
         Iterate over the elements.
 
         Example:
-            >>> list(SequenceManipulator(['A', 'B', 'C']))
+            >>> list(SequenceTool(['A', 'B', 'C']))
             ['A', 'B', 'C']
         """
 
         return iter(self._data)
 
 
-    def append(self, element: T) -> 'SequenceManipulator[T]':
+    def append(self, element: T) -> 'SequenceTool[T]':
         """
         Return a new sequence with 'element' appended.
 
@@ -163,15 +163,15 @@ class SequenceManipulator(Generic[T]):
             element (T): The element to append.
 
         Returns:
-            SequenceManipulator[T]
+            SequenceTool[T]
 
         Raises:
             TypeError: If strict and type mismatch.
 
         Example:
-            >>> list(SequenceManipulator(['A', 'B']).append('C'))
+            >>> list(SequenceTool(['A', 'B']).append('C'))
             ['A', 'B', 'C']
-            >>> SequenceManipulator(['A']).append(1)    # doctest: +IGNORE_EXCEPTION_DETAIL
+            >>> SequenceTool(['A']).append(1)    # doctest: +IGNORE_EXCEPTION_DETAIL
             Traceback (most recent call last):
             TypeError: ... 
         """
@@ -183,7 +183,7 @@ class SequenceManipulator(Generic[T]):
         return type(self)(list(self._data) + [element], strict=self._strict, expected_type=self._expected_type)
 
 
-    def extend(self, elements: List[T]) -> 'SequenceManipulator[T]':
+    def extend(self, elements: List[T]) -> 'SequenceTool[T]':
         """
         Return a new sequence with 'elements' appended.
 
@@ -191,15 +191,15 @@ class SequenceManipulator(Generic[T]):
             elements (List[T]): Elements to append.
 
         Returns:
-            SequenceManipulator[T]
+            SequenceTool[T]
 
         Raises:
             TypeError: If strict and any element has wrong type.
 
         Example:
-            >>> list(SequenceManipulator(['A']).extend(['B', 'C']))
+            >>> list(SequenceTool(['A']).extend(['B', 'C']))
             ['A', 'B', 'C']
-            >>> SequenceManipulator(['A']).extend(['B', 1])  # doctest: +IGNORE_EXCEPTION_DETAIL
+            >>> SequenceTool(['A']).extend(['B', 1])  # doctest: +IGNORE_EXCEPTION_DETAIL
             Traceback (most recent call last):
             TypeError: ...
         """
@@ -215,7 +215,7 @@ class SequenceManipulator(Generic[T]):
         return type(self)(list(self._data) + elements, strict=self._strict, expected_type=self._expected_type)
 
 
-    def rotate_by(self, shift: int) -> 'SequenceManipulator[T]':
+    def rotate_by(self, shift: int) -> 'SequenceTool[T]':
         """
         Create a rotated copy of the sequence.
 
@@ -226,17 +226,17 @@ class SequenceManipulator(Generic[T]):
                          Positive = right shift, negative = left shift.
 
         Returns:
-            SequenceManipulator[T]
+            SequenceTool[T]
 
         Raises:
             ValueError: If sequence is empty.
 
         Example:
-            >>> list(SequenceManipulator(['A', 'B', 'C']).rotate_by(-1))
+            >>> list(SequenceTool(['A', 'B', 'C']).rotate_by(-1))
             ['B', 'C', 'A']
-            >>> list(SequenceManipulator(['A', 'B', 'C']).rotate_by(4))
+            >>> list(SequenceTool(['A', 'B', 'C']).rotate_by(4))
             ['C', 'A', 'B']
-            >>> SequenceManipulator([]).rotate_by(1)  # doctest: +IGNORE_EXCEPTION_DETAIL
+            >>> SequenceTool([]).rotate_by(1)  # doctest: +IGNORE_EXCEPTION_DETAIL
             Traceback (most recent call last):
             ValueError: ...
         """
@@ -257,7 +257,7 @@ class SequenceManipulator(Generic[T]):
 
 
 
-    def rotate_generator(self, step: int = 1) -> Iterator['SequenceManipulator[T]']:
+    def rotate_generator(self, step: int = 1) -> Iterator['SequenceTool[T]']:
         """
         Yield successive rotations by multiples of 'step'.
 
@@ -265,7 +265,7 @@ class SequenceManipulator(Generic[T]):
             step (int): Increment per rotation (must be > 0).
 
         Yields:
-            SequenceManipulator[T]: Rotades sequences.
+            SequenceTool[T]: Rotades sequences.
 
         Raises:
             ValueError: If sequence is empty or step <= 0.
@@ -277,7 +277,7 @@ class SequenceManipulator(Generic[T]):
             permutations for use in alternative cipher schemes.
 
         Example:
-            >>> gen = SequenceManipulator(['A', 'B', 'C']).rotate_generator(1)
+            >>> gen = SequenceTool(['A', 'B', 'C']).rotate_generator(1)
             >>> [list(next(gen)) for _ in range(3)]
             [['A', 'B', 'C'], ['C', 'A', 'B'], ['B', 'C', 'A']]
             
@@ -305,7 +305,7 @@ class SequenceManipulator(Generic[T]):
         Returns number of unique rotations based on step.
         
         Example:
-            >>> SequenceManipulator(['A', 'B', 'C']).cycle_length(1)
+            >>> SequenceTool(['A', 'B', 'C']).cycle_length(1)
             3
         """
         return len(self._data) // gcd(step, len(self._data))
@@ -315,7 +315,7 @@ class SequenceManipulator(Generic[T]):
             self, n: int, 
             generator_func: Callable[[int], 
             Iterator[T]]
-            ) -> List['SequenceManipulator[T]']:
+            ) -> List['SequenceTool[T]']:
         """
         Generate a list of sequences by applying 'generator_func' for each i in range(n).
 
@@ -324,7 +324,7 @@ class SequenceManipulator(Generic[T]):
             generator_func (Callable[[int], List[T]]): Function producing sequence for each i.
 
         Returns:
-            List[SequenceManipulator[T]]
+            List[SequenceTool[T]]
 
         Raises:
             ValueError: If n <= 0 or n == 1.
@@ -341,7 +341,7 @@ class SequenceManipulator(Generic[T]):
 
         Example:
             >>> def gen(i): return [chr(65 + (j + i) % 3) for j in range(3)]
-            >>> seqs = SequenceManipulator(['A', 'B', 'C']).from_generator(3, gen)
+            >>> seqs = SequenceTool(['A', 'B', 'C']).from_generator(3, gen)
             >>> [list(seq) for seq in seqs]
             [['A', 'B', 'C'], ['B', 'C', 'A'], ['C', 'A', 'B']]
         """
@@ -358,7 +358,7 @@ class SequenceManipulator(Generic[T]):
         ]
 
 
-    def move_elements_to_front(self, elements: List[T]) -> Iterator['SequenceManipulator[T]']:
+    def move_elements_to_front(self, elements: List[T]) -> Iterator['SequenceTool[T]']:
         """
         For each element, move its first occurrence to the front and yield result.
 
@@ -366,13 +366,13 @@ class SequenceManipulator(Generic[T]):
             elements (List[T]): Elements to move.
 
         Yields:
-            SequenceManipulator[T]
+            SequenceTool[T]
 
         Raises:
             ValueError: If sequence is empty.
 
         Example:
-            >>> seq = SequenceManipulator(['A', 'B', 'C'])
+            >>> seq = SequenceTool(['A', 'B', 'C'])
             >>> list(next(seq.move_elements_to_front(['C'])))
             ['C', 'A', 'B']
         """
@@ -384,3 +384,9 @@ class SequenceManipulator(Generic[T]):
                 temp = list(self._data)
                 temp.remove(element)
                 yield type(self)([element] + temp, strict=self._strict, expected_type=self._expected_type)
+
+
+    def index_of(self, value: T) -> int:
+        """Return the index of a value in the sequence."""
+        return self._data.index(value)
+
