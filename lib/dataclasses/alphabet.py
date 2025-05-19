@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from typing import List
 
+from sequences.sequencemanipulator import SequenceManipulator
+
+
 @dataclass(frozen=True)
 class Alphabet:
     """
@@ -24,16 +27,3 @@ class Alphabet:
         seq = SequenceManipulator(chars, strict=True)
         return cls(name=name, sequence=seq)
 
-    # kommer nog ta bort denna då den inte tillhör alphabet strict utan mer är en 
-    # funktion för att manipulera listor och som kan göras mer abstrakt i 
-    def substitution_map(self, other: 'Alphabet') -> dict[str, str]:
-        """
-        Delegates to the underlying SequenceManipulator to create a substitution map.
-        """
-        return self.sequence.substitution_map(other.sequence)
-
-    def push(self):
-        """
-        Delegates to the underlying SequenceManipulator push generator.
-        """
-        return self.sequence.push()
